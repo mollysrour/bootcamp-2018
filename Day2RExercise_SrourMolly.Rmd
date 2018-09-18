@@ -1,0 +1,89 @@
+---
+title: "R Day 2"
+author: "Molly Srour"
+date: "9/18/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+```
+
+```{r}
+gapminder <- read.csv('/Users/mollysrour/Documents/MSiA/bootcamp-2018/data/gapminder5.csv')
+obs <- 1:nrow(gapminder)
+for(i in obs) {
+  gapminder[i, "gdp"] <- gapminder[i,"pop"] * gapminder[i, "gdpPercap"]
+}
+for(i in obs) {
+  gapminder[i, "log_gdpPercap"] <- log(gapminder[i, "gdpPercap"])
+  gapminder[i, "log_pop"] <- log(gapminder[i, "pop"])
+}
+
+years <- unique(gapminder$year)
+for(i in years) {
+  mean_le <- mean(gapminder$lifeExp[gapminder$year ==i], 
+                  na.rm = T)
+  print(paste0(i, ": ", mean_le))
+}
+```
+
+```{r}
+continents <- unique(gapminder$continent)
+for(i in continents){
+  mean_le <- mean(gapminder$lifeExp[gapminder$continent == i],
+                na.rm = T)
+  print(paste0(i, ": ", mean_le))
+}
+for(i in continents){
+  print(paste0("Continent:", i))
+  for(j in years) {
+    sd_le <- sd(gapminder$lifeExp[gapminder$continent ==i & gapminder$year == j],
+                na.rm=T)
+  }
+}
+```
+
+```{r}
+  while(i <=2002 & i >=1987){
+    sd_le <- sd(gapminder$lifeExp[gapminder$year == i],
+                na.rm=T)
+  }
+```
+```{r}
+threshold <- 1987
+
+for (i in unique(gapminder$year)) {
+   tmp <- mean(gapminder$pop[gapminder$year==i])
+   
+   if (i < threshold) {
+       print(paste("Sorry, your year is less than", threshold))
+   } else {
+       print(paste("Population in", i, ": ", tmp))
+   }
+}
+
+
+```
+
+```{r}
+report <- 
+  function(df, variable, continent) {
+    var <- gapminder[[variable]][gapminder$continent == continent]
+    m_le <- mean(var)
+    med_le <- median(var)
+    min_le <- min(var)
+    max_le <- max(var)
+    cat("Continent:", continent, 
+        "\nMean Life Expectancy:", m_le,
+        "\nMedian Life Expectancy:", med_le,
+        "\nMin Life Expectancy:", min_le,
+        "\nMax Life Expectancy:", max_le)
+  }
+
+report(gapminder, "lifeExp", "Asia")
+
+
+```
+
