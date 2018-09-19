@@ -1,0 +1,76 @@
+---
+title: "R Day 3"
+author: "Molly Srour"
+date: "9/19/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(lubridate)
+library(reshape2)
+library(dplyr)
+```
+
+```{r}
+generation <- read.csv(here::here("data/generation.csv"), stringsAsFactors = F)
+imports <- read.csv(here::here("data/imports.csv"), stringsAsFactors = F) #read_csv always does the strings as factors thing
+
+str(generation)  #shows the structure of your data frame
+generation$datetime <- as_datetime(generation$datetime) #allows R to understand both the calendar date and the time 
+imports$datetime <- as_datetime(generation$datetime)
+long_gen <- melt(generation, id.vars = 'datetime', variable.name = 'source', value.name = 'usage')
+#sorted by variable.name and then value.name follows. So basically all the other categories besides value.name is melted into variable.name which means that the id.vars repeats as many times as there are columns besides the value.name column and id.vars column. So all the TITLES of the columns beseides id.vars and value.name are included in the variable.name column in the melted data frame, with their corresponding value in value.name, can include multiple variable.names 
+long_gen[order(long_gen$datetime)[1:20],]
+merged_energy <- merge(imports, generation, by ='datetime')
+
+long_merged_energy <- melt(alldata, id.vars = 'datetime', variable.name = 'source', value.name = 'usage')
+```
+
+```{r}
+#dplyr select function can select by name position range or drop variables (select(df, blah))
+tmp <- select(merged_energy, biogas, biomass, geothermal, solar)
+#also select one_of(), contains(), starts_with(), ends_with(), matches()
+#dplyr filter function works like the select function but there is a qualifier in type of data, variable greater than something etc can do multiple qualifiers/conditions
+#mutate creates new variables can create many in mutates mutate(df, var = equation, var= equation)
+#summarize reduces observations to a single variable based on a function like mean
+#summarize(df, mean = mean) will spit out a single observation 
+```
+
+
+```{r}
+#dplyr pipes lets you chain together functions
+
+long_merged_energy %>%
+  filter(source == 'geotherm') %>%
+  select(-datetime) %>%
+  mutate(log_usage = log(usage)) %>%
+  summarize(mean_log_usage = mean(log_usage, na.rm = T))
+
+#while piping, use .
+#command shift m to create pipe
+```
+
+```{r}
+
+merged_energy %>% 
+  select(contains('hydro')) %>% 
+  mutate(total_hydro = rowSums(., na.rm =T)) %>% 
+  summarize(mean_hydro <- mean(total_hydro, na.rm = T))
+```
+
+```{r}
+#group_by is a powerful function that allows us to perform operations by groups of observations!
+#Very useful with summarize!
+long_merged_energy %>% 
+  group_by(source) %>% 
+  summarize(sum_usage = sum(usage, na.rm = T))
+```
+```{r}
+
+long_merged_energy %>% 
+  filter(source == c('large_hydro', 'small_hydro', 'biogas', 'biomass')) %>% 
+  group_by(source) %>% 
+  summarize(mean_usage = mean(usage, na.rm = T))
+```
+
